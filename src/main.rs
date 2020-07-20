@@ -9,7 +9,7 @@ struct Cell {
 impl Default for Cell {
     fn default() -> Self {
         Cell {
-            values: vec![1, 2, 3, 4, 5, 6, 7, 8, 9]
+            values: vec!(1, 2, 3, 4, 5, 6, 7, 8, 9)
         }
     }
 }
@@ -59,8 +59,25 @@ impl fmt::Display for Sudoku {
     }
 }
 
+impl Sudoku {
+    fn set(&mut self, x: i8, y: i8, value: i8) {
+        if x >= 9 || y >= 9 {
+            panic!(format!("Invalid coords: ({}, {})", x, y));
+        }
+
+        let index = (y * 9 + x) as usize;
+
+        let cell = self.cells.get_mut(index).expect("Unable to find cells");
+
+        cell.values.retain(|&x| x == value);
+    }
+}
+
 fn main() {
-    let sudoku = Sudoku::default();
+    let mut sudoku = Sudoku::default();
+
+    sudoku.set(1, 1, 9);
+    sudoku.set(1, 8, 9);
 
     println!("{}", sudoku);
 }
