@@ -1,5 +1,6 @@
 use std::fmt;
 use itertools::Itertools;
+use colored::*;
 
 #[derive(Debug)]
 struct Cell {
@@ -21,7 +22,7 @@ impl fmt::Display for Cell {
             1 => {
                 let value = self.values.first().unwrap();
 
-                write!(f, "{}", value)
+                write!(f, "{}", value.to_string().bold())
             },
             _ => write!(f, "?")
         }
@@ -60,24 +61,53 @@ impl fmt::Display for Sudoku {
 }
 
 impl Sudoku {
-    fn set(&mut self, x: i8, y: i8, value: i8) {
+    fn validate(&mut self, x: i8, y: i8, value: i8) {
         if x >= 9 || y >= 9 {
             panic!(format!("Invalid coords: ({}, {})", x, y));
         }
 
-        let index = (y * 9 + x) as usize;
+        if value > 9 {
+            panic!(format!("Invalid value: {}", value));
+        }
+    }
 
-        let cell = self.cells.get_mut(index).expect("Unable to find cells");
+    fn set(&mut self, x: i8, y: i8, value: i8) {
+        self.validate(x, y, value);
+
+        let index = ((x - 1) * 9 + (y - 1)) as usize;
+
+        let cell = self.cells.get_mut(index).expect("Unable to find cell");
 
         cell.values.retain(|&x| x == value);
     }
+
+    fn unset(&mut self, x: i8, y: i8, value: i8) {
+        self.validate(x, y, value);
+
+        let index = ((x - 1) * 9 + (y - 1)) as usize;
+
+        let cell = self.cells.get_mut(index).expect("Unable to find cell");
+
+        cell.values.retain(|&x| x != value);
+    }
+
 }
 
 fn main() {
     let mut sudoku = Sudoku::default();
 
+    // Set values here ↓
     sudoku.set(1, 1, 9);
     sudoku.set(1, 8, 9);
+
+    sudoku.unset(1, 2, 2);
+    sudoku.unset(1, 2, 3);
+    sudoku.unset(1, 2, 4);
+    sudoku.unset(1, 2, 5);
+    sudoku.unset(1, 2, 6);
+    sudoku.unset(1, 2, 7);
+    sudoku.unset(1, 2, 8);
+    sudoku.unset(1, 2, 9);
 
     println!("{}", sudoku);
 }
