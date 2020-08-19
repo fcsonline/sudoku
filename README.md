@@ -8,6 +8,18 @@ Compile it with [cargo](https://doc.rust-lang.org/cargo/getting-started/installa
 cargo build --release
 ```
 
+## Use
+
+```
+cargo run -- -f sample/easy.txt
+```
+
+or
+
+```
+sudoku -f sample/difficult.txt
+```
+
 # License
 
-[MIT](https://github.com/fcsonline/tmux-thumbs/blob/master/LICENSE)
+[MIT](https://github.com/fcsonline/sudoku/blob/master/LICENSE)
