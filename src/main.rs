@@ -5,7 +5,8 @@ use clap::{Arg, App};
 
 #[derive(Debug)]
 struct Sudoku {
-    cells: Vec<Option<i8>>
+    cells: Vec<Option<u8>>,
+    hints: Vec<u8>
 }
 
 impl Default for Sudoku {
@@ -13,7 +14,8 @@ impl Default for Sudoku {
         let rng = 1..=81;
 
         Sudoku {
-            cells: rng.map(|_| Default::default()).collect()
+            cells: rng.map(|_| Default::default()).collect(),
+            hints: (1..=9).collect()
         }
     }
 }
@@ -50,7 +52,7 @@ impl Sudoku {
                 '1'..='9' => {
                     let x = position % 9;
                     let y = position / 9;
-                    let value = c.to_digit(10).unwrap() as i8;
+                    let value = c.to_digit(10).unwrap() as u8;
 
                     self.set(x, y, Some(value));
 
@@ -68,11 +70,40 @@ impl Sudoku {
         }
     }
 
+    fn prepare(&mut self) {
+        let mut hints: Vec<u8> = self.cells.iter().filter_map(|x| *x).collect();
+
+        hints.sort();
+
+        let mut data_grouped: Vec<(u8, usize)> = Vec::new();
+        for (key, group) in &hints.into_iter().group_by(|elt| *elt) {
+            data_grouped.push((key, group.collect::<Vec<u8>>().len()));
+        }
+
+        data_grouped.sort_by(|(_, asize), (_, bsize)| bsize.partial_cmp(asize).unwrap());
+
+        let mut hints = data_grouped
+            .iter()
+            .map(|(v, _)| *v)
+            .collect::<Vec<u8>>();
+
+        for value in 1..=9 {
+            if !hints.contains(&value) {
+                hints.push(value);
+            }
+        }
+
+        self.hints = hints;
+    }
+
     fn solve(&mut self) {
+        // FIXME: Why I need to clone?
+        let hints = self.hints.clone();
+
         for x in 0..9 {
             for y in 0..9 {
                 if self.get(x, y).is_none() {
-                    for value in 1..=9 {
+                    for value in hints {
                         if self.possible(x, y, value) {
                             self.set(x, y, Some(value));
                             self.solve();
@@ -87,9 +118,11 @@ impl Sudoku {
 
         println!("Solved!");
         println!("{}", self);
+
+        std::process::exit(0);
     }
 
-    fn possible(&mut self, x: i8, y: i8, value: i8) -> bool {
+    fn possible(&mut self, x: u8, y: u8, value: u8) -> bool {
         // Validate row
         let found = (0..9).find(|&x| {
             if let Some(cell) = self.get(x, y) {
@@ -145,15 +178,15 @@ impl Sudoku {
         return true
     }
 
-    fn index (&self, x: i8, y: i8) -> usize {
+    fn index (&self, x: u8, y: u8) -> usize {
         (x + y * 9) as usize
     }
 
-    fn get(&mut self, x: i8, y: i8) -> Option<i8> {
+    fn get(&mut self, x: u8, y: u8) -> Option<u8> {
         *self.cells.get(self.index(x, y)).expect(&format!("Unknown position: ({}, {})", x, y))
     }
 
-    fn set(&mut self, x: i8, y: i8, value: Option<i8>) {
+    fn set(&mut self, x: u8, y: u8, value: Option<u8>) {
         let index = { self.index(x, y) };
         self.cells[index] = value;
     }
@@ -179,5 +212,6 @@ fn main() {
     println!("Preview:");
     println!("{}", sudoku);
 
+    sudoku.prepare();
     sudoku.solve();
 }
