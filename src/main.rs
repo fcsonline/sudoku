@@ -1,3 +1,4 @@
+use prettytable::{Table, Row, Cell};
 use std::fmt;
 use itertools::Itertools;
 use colored::*;
@@ -22,22 +23,28 @@ impl Default for Sudoku {
 
 impl fmt::Display for Sudoku {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let data = &self
+        let mut table = Table::new();
+
+        &self
             .cells
             .iter()
             .chunks(9)
             .into_iter()
-            .map ( |chunk|
-                format!("{}\n", chunk.map(|c| {
-                    match c {
+            .for_each(|chunk| {
+                let cells = chunk.map(|c| {
+                    let text = match c {
                         Some(value) => format!("{}", value.to_string().bold()),
-                        None => "?".to_string()
-                    }
-                }).join(" "))
-            )
-            .collect::<String>();
+                        None => " ".to_string()
+                    };
 
-        write!(f, "{}", data)
+                    Cell::new(&text)
+                }).collect();
+
+                table.add_row(Row::new(cells));
+            });
+
+        table.printstd();
+        write!(f, "")
     }
 }
 
